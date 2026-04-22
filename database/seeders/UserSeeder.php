@@ -18,11 +18,11 @@ class UserSeeder extends Seeder
         User::create([
             'name'       => 'Gabriele',
             'last_name'  => 'L.',
-            'ci'         => '1312292929',
-            'email'      => 'gabrielelucaszambrano2003@gmail.com',
-            'password'   => 'gab123', 
+            'ci'         => '4315292929',
+            'email'      => 'gab@gmail.com',
+            'password'   => 'Gab#123', 
             'role_id'    => $adminRole->id,
-            'commission' => 0, // Tú no cobras comisión
+            'commission' => 0, 
         ]);
 
         $barberNames = [
