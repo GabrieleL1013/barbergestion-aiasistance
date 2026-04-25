@@ -22,6 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user()->load('role');
     });
 
+    // Obtener datos del perfil del usuario autenticado (controlador)
+    Route::get('/me', [AuthController::class, 'me']);
+
     // Cerrar sesión
     Route::post('/logout', [AuthController::class, 'logout']);
 

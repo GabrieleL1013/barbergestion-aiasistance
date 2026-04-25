@@ -53,4 +53,12 @@ class AuthController extends Controller
             'message' => 'Sesión cerrada correctamente'
         ]);
     }
+
+    /**
+     * Devuelve los datos del usuario autenticado (para la interfaz de perfil).
+     */
+    public function me(Request $request)
+    {
+        return response()->json($request->user()->load('role'));
+    }
 }

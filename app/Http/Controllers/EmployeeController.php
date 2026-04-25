@@ -24,7 +24,8 @@ class EmployeeController extends Controller
         $request->validate([
             'name'      => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'phone'     => 'nullable|string|max:20',
+            'ci'        => 'required|string|max:20|unique:users',
+            'phone'     => 'nullable|string|max:20|unique:users',
             'email'     => 'required|string|email|max:255|unique:users',
             'password'  => 'required|string|min:6',
             'role_id'   => 'required|exists:roles,id', // Verifica que el ID del rol exista en la BD
@@ -34,6 +35,7 @@ class EmployeeController extends Controller
         $employee = User::create([
             'name'      => $request->name,
             'last_name' => $request->last_name,
+            'ci'        => $request->ci,
             'phone'     => $request->phone,
             'email'     => $request->email,
             'password'  => $request->password, // Se encripta solo gracias a los casts() del modelo

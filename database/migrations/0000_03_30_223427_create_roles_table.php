@@ -17,7 +17,7 @@ return new class extends Migration
             // Nombre visible para los usuarios (ej: 'Administrador', 'Barbero')
             $table->string('name');
             
-            // Nombre interno para usar en el código (ej: 'admin', 'barber')
+            // Nombre interno para usar en el código (ej: 'admin', 'barber', manager)
             $table->string('slug')->unique();
             
             // Descipción del Rol. Nullable por si un rol es muy obvio y no requiere descripción

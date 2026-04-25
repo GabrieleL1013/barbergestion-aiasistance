@@ -39,10 +39,12 @@ class ProductController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0', // Validamos que sea un número positivo
+            'cost'        => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
             'measure'     => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:255',
-            'photo'       => 'nullable|string', // Aquí viaja el base64
+            'photo'       => 'nullable|string',
+            'is_active'   => 'boolean',
         ]);
 
         // 3. Crear el producto
@@ -75,10 +77,12 @@ class ProductController extends Controller
         $request->validate([
             'name'        => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'cost'        => 'sometimes|required|numeric|min:0',
             'price'       => 'sometimes|required|numeric|min:0',
             'measure'     => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:255',
             'photo'       => 'nullable|string',
+            'is_active'   => 'sometimes|boolean',
         ]);
 
         // 4. Actualizar
