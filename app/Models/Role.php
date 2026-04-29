@@ -13,11 +13,16 @@ class Role extends Model
         'name',
         'slug',
         'description',
+        'color',
+        'level_permissions',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean', // Asegura que siempre se maneje como true/false
+        'level_permissions' => 'integer', // Asegura que siempre se maneje como entero
+        'color' => 'string', // Asegura que siempre se maneje como cadena de texto
+
     ];
 
     // Relación: Un Rol tiene muchos Usuarios

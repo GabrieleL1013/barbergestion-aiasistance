@@ -2,12 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        // 1. Validar los datos que envía React
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'ci' => 'required|string|max:20|unique:users,ci',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'avatar' => 'nullable|string',
+            'password' => 'required|string|min:6',
+        ]);
+
+        // 2. Crear el usuario con rol de "user" por defecto
+        $user = User::create([
+            'name' => $request->name,
+            'last_name' => $request->last_name,
+            'ci' => $request->ci,
+            'email' => $request->email,
+            'phone' => $request->phone ?? null,
+            'avatar' => $request->avatar ?? null,
+            'password' => $request->password, // El mutator en el modelo se encargará de hashear la contraseña
+            'role_id' => Role::where('slug', 'user')->first()->id, // Asignamos el rol de "user" por defecto
+        ]);
+
+        // 3. Devolver una respuesta al frontend
+        return response()->json([
+            'message' => 'Registro exitoso. Ahora puedes iniciar sesión.',
+            'user' => $user
+        ], 201);
+    }
     public function login(Request $request)
     {
         // 1. Validar los datos que envía React

@@ -22,6 +22,10 @@ return new class extends Migration
             
             // Descipción del Rol. Nullable por si un rol es muy obvio y no requiere descripción
             $table->text('description')->nullable(); 
+
+            $table->string('color')->nullable()->default('#000000'); // Color para identificar visualmente el rol en la UI (ej: '#FF0000' para rojo)
+
+            $table->integer('level_permissions')->default(0); // Nivel de permisos para jerarquizar roles (ej: 0 = sin permisos, 1 = básico, 2 = avanzado, etc.)
             
             // Un estado para desactivar roles sin borrarlos de la BD
             $table->boolean('is_active')->default(true); 

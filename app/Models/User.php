@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes; // Notifiable es la magia que conectará con tu tabla notifications
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -22,6 +22,8 @@ class User extends Authenticatable
         'avatar',
         'commission',
         'password',
+        'visits_count', // Nuevo: Para la fidelidad
+        'total_lifetime_visits' // Nuevo: Para estadísticas
     ];
 
     protected $hidden = [
@@ -37,33 +39,30 @@ class User extends Authenticatable
         ];
     }
 
-    // Relación: Un Usuario pertenece a un Rol
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
 
-    // Relación: Un Usuario (empleado/dueño) registra muchos Pagos/Transacciones
-    public function payments()
+    // --- RELACIONES COMO CLIENTE ---
+    public function appointmentsAsClient()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(Appointment::class, 'client_id');
     }
 
-    // Las ventas/servicios que este empleado ha realizado
-    public function amounts()
+    public function purchases() // Compras realizadas por este cliente
     {
-        return $this->hasMany(Amount::class);
+        return $this->hasMany(Sale::class, 'client_id');
     }
 
-    // Los pagos/sueldos que este empleado ha recibido
-    public function receivedPayments()
+    // --- RELACIONES COMO BARBERO ---
+    public function appointmentsAsBarber()
     {
-        return $this->hasMany(Payment::class, 'user_id');
+        return $this->hasMany(Appointment::class, 'barber_id');
     }
 
-    // Los pagos que este usuario (si es dueño) ha emitido a otros
-    public function issuedPayments()
+    public function salesMade() // Ventas/Cobros registrados por este barbero
     {
-        return $this->hasMany(Payment::class, 'admin_id');
+        return $this->hasMany(Sale::class, 'barber_id');
     }
 }

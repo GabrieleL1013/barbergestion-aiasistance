@@ -4,30 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Product extends Model
+class Service extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'name',
         'description',
-        'cost',
         'price',
-        'measure',
-        'unit',
-        'photo',
-        'is_active'
+        'duration_minutes',
+        'is_active',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
-        'cost' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
-    public function saleItems() // Para saber en qué ventas se vendió este producto
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function saleItems() // Para saber en qué ventas se incluyó este servicio
     {
         return $this->hasMany(SaleItem::class);
     }

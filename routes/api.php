@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -74,4 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/barber/my-kpis', [DashboardController::class, 'getBarberKpis']);
     Route::get('/dashboard/barber/my-chart', [DashboardController::class, 'getBarberChart']);
     
+    // --- Módulo de Citas (Appointments) ---
+    Route::get('/appointments', [AppointmentController::class, 'index']); // Ver citas
+    Route::post('/appointments', [AppointmentController::class, 'store']); // Crear cita
+    Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']); // Cambiar estado
 });

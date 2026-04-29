@@ -13,16 +13,17 @@ class UserSeeder extends Seeder
     {
         $adminRole = Role::where('slug', 'admin')->first();
         $barberRole = Role::where('slug', 'barber')->first();
+        $userRole = Role::where('slug', 'user')->first();
 
         // 1. Gabriele (Sin comisión)
         User::create([
             'name'       => 'Gabriele',
             'last_name'  => 'L.',
-            'ci'         => '1312292929',
-            'email'      => 'gabrielelucaszambrano2003@gmail.com',
-            'password'   => 'gab123', 
+            'ci'         => '4315292929',
+            'email'      => 'gab@gmail.com',
+            'password'   => 'Gab#123', 
             'role_id'    => $adminRole->id,
-            'commission' => 0, // Tú no cobras comisión
+            'commission' => 0, 
         ]);
 
         $barberNames = [
@@ -49,5 +50,21 @@ class UserSeeder extends Seeder
                 'commission' => Arr::random([40, 50, 60]), 
             ]);
         }
+
+        // 4. Crear 10 usuarios comunes
+        for ($i = 1; $i <= 10; $i++) {
+            $sufijo = str_pad($i, 2, '0', STR_PAD_LEFT); // Genera un sufijo de 2 dígitos (ej: 01, 02, ..., 10)
+            User::create([
+                'name'       => "Usuario $sufijo",
+                'last_name'  => "Prueba $sufijo",
+                'ci'         => '12345678' . $sufijo,
+                'phone'      => '09876543' . $sufijo,
+                'email'      => "usuario{$sufijo}@barberia.com",
+                'password'   => 'password123',
+                'role_id'    => $userRole->id,
+                'commission' => 0,
+            ]);
+        }
+
     }
 }
