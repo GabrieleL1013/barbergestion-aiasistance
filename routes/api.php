@@ -1,19 +1,30 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\BusinessProfileController;
+use App\Http\Controllers\IAController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\AmountController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DashboardController;
 
 // Rutas Públicas
+
+// Ruta para obtener el perfil del negocio (sin autenticación)
+Route::get('/business-profile', [BusinessProfileController::class, 'show']);
+
+// Rutas de Autenticación
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+
+Route::post('/analizar-estilo', [IAController::class, 'analizarEstilo']);
+Route::post('/ia/consultar', [IAController::class, 'sugerirCorte']);
 
 // Rutas Protegidas (Requieren enviar el token en el header)
 Route::middleware('auth:sanctum')->group(function () {
@@ -25,6 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Obtener datos del perfil del usuario autenticado (controlador)
     Route::get('/me', [AuthController::class, 'me']);
+
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
 
     // Cerrar sesión
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -41,17 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-    // Rutas de Gestión de Clientes
-    Route::get('/clients', [ClientController::class, 'index']);
-    Route::post('/clients', [ClientController::class, 'store']);
-    Route::put('/clients/{id}', [ClientController::class, 'update']);
-    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
-
-    // Rutas de Gestión de Montos
-    Route::get('/amounts', [AmountController::class, 'index']);
-    Route::post('/amounts', [AmountController::class, 'store']);
-    Route::put('/amounts/{id}', [AmountController::class, 'update']);
-    Route::delete('/amounts/{id}', [AmountController::class, 'destroy']);
+    // Rutas de Gestión de Usuarios (Clientes)
+    Route::get('/users', [UserController::class, 'index']);
 
     // Rutas de Gestión de Pagos
     Route::get('/payments', [PaymentController::class, 'index']);
@@ -79,4 +83,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index']); // Ver citas
     Route::post('/appointments', [AppointmentController::class, 'store']); // Crear cita
     Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']); // Cambiar estado
+
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
@@ -58,25 +59,22 @@ class EmployeeController extends Controller
 
         if (!in_array($userRoleSlug, ['admin', 'manager'])) {
             return response()->json([
-                'message' => 'Acceso denegado. Solo los administradores o programadores pueden ver la lista de usuarios.'
+                'message' => 'Acceso denegado. Solo los administradores o programadores pueden ver la lista de empleados.'
             ], 403);
         }
 
-        // 2. CONFIGURAR LA PAGINACIÓN DINÁMICA CON LÍMITE DE SEGURIDAD
-        // Obtenemos el parámetro 'per_page', por defecto 10, y lo convertimos a número entero
+        // 2. CONFIGURAR LA PAGINACIÓN
         $requestedPerPage = (int) $request->query('per_page', 10);
-
-        // La magia de la limitación: 
-        // max(1, ...) evita que alguien pida 0 o números negativos.
-        // min(100, ...) evita que alguien pida más de 100.
         $perPage = min(100, max(1, $requestedPerPage));
 
-        // 3. OBTENER LOS USUARIOS PAGINADOS
-        $users = User::with('role')->paginate($perPage);
+        // 3. OBTENER SOLO LOS BARBEROS PAGINADOS
+        // whereHas() permite filtrar usuarios dependiendo de una condición en su tabla relacionada (roles)
+        $users = User::whereHas('role', function ($query) {
+            $query->where('slug', 'barber');
+        })->with('role')->paginate($perPage);
 
-        // 4. RETORNAR LA RESPUESTA
         return response()->json([
-            'message' => 'Lista de usuarios obtenida correctamente',
+            'message' => 'Lista de barberos obtenida correctamente',
             'users'   => $users 
         ], 200);
     }

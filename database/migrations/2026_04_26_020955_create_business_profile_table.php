@@ -21,6 +21,7 @@ return new class extends Migration
             $table->json('social_networks')->nullable(); 
             $table->json('opening_hours')->nullable(); 
             $table->longText('logo')->nullable();
+            $table->json('extra_info')->nullable(); // Para cualquier otro dato adicional que queramos guardar sin necesidad de modificar la estructura de la tabla
             $table->timestamps();
         });
     }

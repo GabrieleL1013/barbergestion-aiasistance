@@ -2,14 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BusinessProfile extends Model
 {
-    protected $table = 'business_profile'; // Forzamos el nombre en singular si así está en la migración
-    protected $fillable = ['name', 'description', 'address', 'phone', 'social_networks', 'opening_hours', 'logo'];
+    use HasFactory;
+
+    protected $table = 'business_profile';
+
+    protected $fillable = [
+        'name',
+        'description',
+        'address',
+        'phone',
+        'social_networks',
+        'opening_hours',
+        'logo',
+        'extra_info'
+    ];
+
+    // Esto es magia pura: convierte los JSON de la BD a arrays en PHP automáticamente
     protected $casts = [
-        'social_networks' => 'array', // Laravel convierte automáticamente el JSON a Array
+        'social_networks' => 'array',
         'opening_hours' => 'array',
+        'extra_info' => 'array',
     ];
 }

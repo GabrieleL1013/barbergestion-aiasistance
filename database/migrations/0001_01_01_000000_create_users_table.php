@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->integer('total_lifetime_visits')->default(0); // Contador de visitas totales a lo largo de la vida del usuario
             $table->longText('avatar')->nullable(); // Avatar del usuario, almacenado como texto largo para permitir URLs o incluso imágenes codificadas en base64
             $table->timestamp('email_verified_at')->nullable(); // Verificación de correo electrónico
-            $table->integer('commission')->default(0); // Porcentaje que se lleva el empleado (ej: 50, 40, 60)
+            $table->integer('commission')->default(0); // Porcentaje que se lleva el empleado (ej: 50, 40, 60). 0 para usuarios sin comisión (ej: clientes)
             $table->string('password'); // Contraseña
             $table->rememberToken(); // Token para "recordar sesión"
             $table->timestamps(); // Fechas de creación y actualización
