@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
+
+    // 1. REGISTRAR NUEVOS EMPLEADOS (Solo admin y manager)
     public function store(Request $request)
     {
         // 1. VERIFICACIÓN DE PERMISOS
@@ -52,6 +54,7 @@ class EmployeeController extends Controller
         ], 201);
     }
 
+    // 2. LISTAR LOS EMPLEADOS (Solo barberos)
     public function index(Request $request)
     {
         // 1. VERIFICACIÓN DE PERMISOS
@@ -79,6 +82,7 @@ class EmployeeController extends Controller
         ], 200);
     }
 
+    // 3. ELIMINAR UN EMPLEADO (Soft Delete)
     public function destroy(Request $request, $id)
     {
         // 1. VERIFICACIÓN DE PERMISOS
@@ -116,6 +120,7 @@ class EmployeeController extends Controller
         ], 200);
     }
 
+    // 4. ACTUALIZAR DATOS DE UN EMPLEADO (Solo admin y manager pueden actualizar a otros, pero cada usuario puede actualizar su propio perfil)
     public function update(Request $request, $id)
     {
         $authUser = $request->user();
@@ -187,5 +192,17 @@ class EmployeeController extends Controller
             'message' => 'Datos actualizados correctamente.',
             'user'    => $targetUser
         ], 200);
+    }
+
+    // 5. OBTENER LA LISTA DE BARBEROS DISPONIBLES (Para el formulario de reserva de citas)
+    public function getAvailableBarbers()
+    {
+        $barbers = User::whereHas('role', function ($query) {
+            $query->where('slug', 'barber');
+        })
+        ->withAvg('reviewsReceived as average_rating', 'rating')
+        ->get();
+
+        return response()->json($barbers);
     }
 }

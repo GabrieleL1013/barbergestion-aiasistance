@@ -63,6 +63,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/payments/{id}/accept', [PaymentController::class, 'acceptPayment']);
     Route::get('/payments/{id}', [PaymentController::class, 'show']);
     Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
+    
+    // --- Módulo de Citas (Appointments) ---
+    Route::get('/appointments', [AppointmentController::class, 'index']); // Ver citas
+    Route::post('/appointments', [AppointmentController::class, 'store']); // Crear cita
+    Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']); // Cambiar estado
+
+    // Rutas para Agendamiento (Disponibles para cualquier rol logueado)
+    Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index']);
+    Route::get('/available-barbers', [App\Http\Controllers\EmployeeController::class, 'getAvailableBarbers']);
 
     // Rutas de Notificaciones
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -78,10 +87,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Dashboard del Empleado ---
     Route::get('/dashboard/barber/my-kpis', [DashboardController::class, 'getBarberKpis']);
     Route::get('/dashboard/barber/my-chart', [DashboardController::class, 'getBarberChart']);
-    
-    // --- Módulo de Citas (Appointments) ---
-    Route::get('/appointments', [AppointmentController::class, 'index']); // Ver citas
-    Route::post('/appointments', [AppointmentController::class, 'store']); // Crear cita
-    Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']); // Cambiar estado
 
 });

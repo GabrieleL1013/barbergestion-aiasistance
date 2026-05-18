@@ -50,21 +50,33 @@ class AppointmentController extends Controller
         $requestedTime = Carbon::parse($request->scheduled_at);
         $service = Service::findOrFail($request->service_id);
         
-        // Calculamos a qué hora terminaría este servicio
+        // Calculamos a qué hora terminaría este nuevo servicio
         $endTime = $requestedTime->copy()->addMinutes($service->duration_minutes);
 
-        // VALIDACIÓN ESTRELLA: Evitar choques de horarios para el mismo barbero
-        $conflict = Appointment::where('barber_id', $request->barber_id)
+        // 1. OBTENER LAS CITAS DEL BARBERO PARA ESE DÍA
+        // Cargamos la relación 'service' para saber cuánto duran sus citas ya agendadas
+        $existingAppointments = Appointment::with('service')
+            ->where('barber_id', $request->barber_id)
             ->whereIn('status', ['pending', 'confirmed']) // Ignoramos las canceladas
-            ->where(function ($query) use ($requestedTime, $endTime) {
-                // Verificamos si el nuevo turno se cruza con uno existente
-                $query->whereBetween('scheduled_at', [$requestedTime, $endTime->copy()->subMinute()])
-                      ->orWhereRaw('DATE_ADD(scheduled_at, INTERVAL (SELECT duration_minutes FROM services WHERE services.id = appointments.service_id) MINUTE) > ? AND scheduled_at <= ?', [$requestedTime, $requestedTime]);
-            })->exists();
+            ->whereDate('scheduled_at', $requestedTime->toDateString()) // Solo revisamos las citas de ese mismo día
+            ->get();
+
+        // 2. VERIFICAR CRUCE DE HORARIOS USANDO CARBON (Compatible con Postgres, MySQL, etc.)
+        $conflict = $existingAppointments->contains(function ($appointment) use ($requestedTime, $endTime) {
+            $existingStart = Carbon::parse($appointment->scheduled_at);
+            
+            // Obtenemos la duración de la cita existente (si por alguna razón el servicio se borró, asumimos 30 min por seguridad)
+            $duration = $appointment->service ? $appointment->service->duration_minutes : 30;
+            $existingEnd = $existingStart->copy()->addMinutes($duration);
+
+            // Fórmula estándar para detectar cruce de rangos de tiempo:
+            // (Inicio Nuevo < Fin Existente) Y (Inicio Existente < Fin Nuevo)
+            return $requestedTime < $existingEnd && $existingStart < $endTime;
+        });
 
         if ($conflict) {
             return response()->json([
-                'message' => 'El barbero seleccionado ya tiene una cita en ese horario.'
+                'message' => 'El barbero seleccionado ya tiene una cita que interfiere con este horario.'
             ], 422);
         }
 

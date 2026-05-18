@@ -31,4 +31,9 @@ class Service extends Model
     {
         return $this->hasMany(SaleItem::class);
     }
+
+    public function reviews() // Reseñas de este servicio
+    {
+        return $this->hasMany(Review::class);
+    }
 }

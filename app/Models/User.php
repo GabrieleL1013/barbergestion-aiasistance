@@ -65,4 +65,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Sale::class, 'barber_id');
     }
+
+    public function reviewsGiven() // Reseñas que este cliente ha dado
+    {
+        return $this->hasMany(Review::class, 'client_id');
+    }
+
+    public function reviewsReceived() // Reseñas que este barbero ha recibido
+    {
+        return $this->hasMany(Review::class, 'barber_id');
+    }
 }
