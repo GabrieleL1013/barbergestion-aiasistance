@@ -3,7 +3,8 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\IAController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,16 +13,27 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReviewController;
 
 // Rutas Públicas
 
 // Ruta para obtener el perfil del negocio (sin autenticación)
 Route::get('/business-profile', [BusinessProfileController::class, 'show']);
 
+// Rutas públicas para reseñas (no requieren autenticación)
+Route::get('/reviews', [ReviewController::class, 'index']); // Listar reseñas (con filtros opcionales)
+Route::get('/reviews/{id}', [ReviewController::class, 'show']); // Obtener reseña por id
+
 // Rutas de Autenticación
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Ruta pública para obtener servicios activos (para el agendamiento)
+// GET /api/services?search=barba&per_page=20&include_inactive=false
+Route::get('/services', [ServiceController::class, 'index']);
+
+// Ruta pública para obtener productos
+Route::get('/products', [ProductController::class, 'index']);
 
 Route::post('/analizar-estilo', [IAController::class, 'analizarEstilo']);
 Route::post('/ia/consultar', [IAController::class, 'sugerirCorte']);
@@ -49,20 +61,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
     // Rutas de Gestión de Productos
-    Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
+    // Rutas de Gestión de Servicios (requieren autenticación + permisos admin/manager)
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::put('/services/{id}', [ServiceController::class, 'update']);
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+
     // Rutas de Gestión de Usuarios (Clientes)
     Route::get('/users', [UserController::class, 'index']);
+    // Crear reseña (requiere autenticación)
+    Route::post('/reviews', [ReviewController::class, 'store']);
 
-    // Rutas de Gestión de Pagos
-    Route::get('/payments', [PaymentController::class, 'index']);
-    Route::post('/payments', [PaymentController::class, 'store']);
-    Route::patch('/payments/{id}/accept', [PaymentController::class, 'acceptPayment']);
-    Route::get('/payments/{id}', [PaymentController::class, 'show']);
-    Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
+    // Rutas de Venta (Sales)
+    Route::post('/sales', [SaleController::class, 'store']);
+    Route::post('/sales/appointment', [SaleController::class, 'storeFromAppointment']);
     
     // --- Módulo de Citas (Appointments) ---
     Route::get('/appointments', [AppointmentController::class, 'index']); // Ver citas
@@ -70,22 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/appointments/{id}/status', [AppointmentController::class, 'updateStatus']); // Cambiar estado
 
     // Rutas para Agendamiento (Disponibles para cualquier rol logueado)
-    Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index']);
-    Route::get('/available-barbers', [App\Http\Controllers\EmployeeController::class, 'getAvailableBarbers']);
+    Route::get('/available-barbers', [EmployeeController::class, 'getAvailableBarbers']);
 
     // Rutas de Notificaciones
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-
-    // Rutas de Dashboards y Analíticas
-    Route::get('/dashboard/admin/kpis', [DashboardController::class, 'getAdminKpis']);
-    Route::get('/dashboard/admin/top-barbers', [DashboardController::class, 'getTopBarbers']);
-    Route::get('/dashboard/admin/top-products', [DashboardController::class, 'getTopProducts']);
-    Route::get('/dashboard/admin/revenue-chart', [DashboardController::class, 'getRevenueChart']);
-
-    // --- Dashboard del Empleado ---
-    Route::get('/dashboard/barber/my-kpis', [DashboardController::class, 'getBarberKpis']);
-    Route::get('/dashboard/barber/my-chart', [DashboardController::class, 'getBarberChart']);
-
 });

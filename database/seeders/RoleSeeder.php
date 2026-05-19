@@ -21,7 +21,7 @@ class RoleSeeder extends Seeder
             'name' => 'Barbero',
             'slug' => 'barber',
             'description' => 'Empleado de la barbería',
-            'color' => '#00FF00', // Verde para barberos
+            'color' => '#e5ff00', // Verde para barberos
             'level_permissions' => 10, // Permisos básicos para barberos
 
         ]);
@@ -39,7 +39,7 @@ class RoleSeeder extends Seeder
             'name' => 'Usuario',
             'slug' => 'user',
             'description' => 'Cliente registrado en la aplicación',
-            'color' => '#0000FF', // Azul para usuarios
+            'color' => '#fff', // Azul para usuarios
             'level_permissions' => 0, // Permisos básicos para usuarios
         ]);
     }

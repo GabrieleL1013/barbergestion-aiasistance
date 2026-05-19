@@ -23,75 +23,114 @@ class SaleController extends Controller
             'items' => 'required|array', // Un array con lo que compró (servicios/productos)
         ]);
 
-        // Iniciamos la transacción segura
         return DB::transaction(function () use ($request) {
-            
             $client = User::findOrFail($request->client_id);
-            $subtotal = 0;
+            $result = $this->createSaleForItems(
+                $client,
+                $request->barber_id,
+                $request->items,
+                $request->payment_method
+            );
 
-            // 2. Calcular el subtotal real consultando la Base de Datos
-            // (Nunca confíes en el total que envía el frontend por seguridad)
-            foreach ($request->items as $item) {
-                $price = $this->getItemPrice($item['type'], $item['id']);
-                $subtotal += $price * $item['quantity'];
-            }
-
-            // 3. LA MAGIA DE LA FIDELIDAD
-            $discount = 0;
-            $promotionApplied = null;
-
-            // Buscamos si el cliente califica para alguna promoción activa
-            $promotion = Promotion::where('is_active', true)
-                                  ->where('required_visits', '<=', $client->visits_count)
-                                  ->orderBy('required_visits', 'desc') // Tomamos la mejor promoción posible
-                                  ->first();
-
-            if ($promotion) {
-                // Aplicamos el descuento
-                $discount = $subtotal * ($promotion->discount_percentage / 100);
-                $promotionApplied = $promotion;
-                
-                // Como ya usó su beneficio, su contador vuelve a cero
-                $client->visits_count = 0;
-            } else {
-                // Si no calificó a promo, le sumamos esta visita a su contador
-                $client->visits_count += 1;
-            }
-
-            // Las visitas históricas nunca se borran (sirven para estadísticas del negocio)
-            $client->total_lifetime_visits += 1;
-            $client->save();
-
-            $totalAmount = $subtotal - $discount;
-
-            // 4. Guardar la Cabecera de la Factura (Sale)
-            $sale = Sale::create([
-                'client_id' => $client->id,
-                'barber_id' => $request->barber_id,
-                'total_amount' => $totalAmount,
-                'payment_method' => $request->payment_method,
-            ]);
-
-            // 5. Guardar el Detalle (SaleItems)
-            foreach ($request->items as $item) {
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['type'] === 'product' ? $item['id'] : null,
-                    'service_id' => $item['type'] === 'service' ? $item['id'] : null,
-                    'quantity' => $item['quantity'],
-                    'price_at_sale' => $this->getItemPrice($item['type'], $item['id']),
-                ]);
-            }
-
-            // Retornamos la respuesta exitosa al frontend
             return response()->json([
                 'message' => 'Venta registrada con éxito',
-                'sale_id' => $sale->id,
-                'total_paid' => $totalAmount,
-                'promotion_applied' => $promotionApplied ? $promotionApplied->name : 'Ninguna',
+                'sale_id' => $result['sale']->id,
+                'total_paid' => $result['totalAmount'],
+                'promotion_applied' => $result['promotionApplied'] ? $result['promotionApplied']->name : 'Ninguna',
                 'client_new_visits_count' => $client->visits_count
             ], 201);
         });
+    }
+
+    public function storeFromAppointment(Request $request)
+    {
+        // Validamos los datos necesarios para generar la venta al crear una cita
+        $request->validate([
+            'client_id' => 'required|exists:users,id',
+            'barber_id' => 'required|exists:users,id',
+            'service_id' => 'required|exists:services,id',
+            'payment_method' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $client = User::findOrFail($request->client_id);
+            $items = [
+                [
+                    'type' => 'service',
+                    'id' => $request->service_id,
+                    'quantity' => 1,
+                ],
+            ];
+
+            $result = $this->createSaleForItems(
+                $client,
+                $request->barber_id,
+                $items,
+                $request->input('payment_method', 'cash')
+            );
+
+            return response()->json([
+                'message' => 'Venta de cita registrada con éxito',
+                'sale_id' => $result['sale']->id,
+                'total_paid' => $result['totalAmount'],
+                'promotion_applied' => $result['promotionApplied'] ? $result['promotionApplied']->name : 'Ninguna',
+                'sale' => $result['sale']->load('items'),
+            ], 201);
+        });
+    }
+
+    public function createSaleForItems(User $client, int $barberId, array $items, string $paymentMethod = 'cash')
+    {
+        $subtotal = 0;
+
+        foreach ($items as $item) {
+            $price = $this->getItemPrice($item['type'], $item['id']);
+            $subtotal += $price * $item['quantity'];
+        }
+
+        $discount = 0;
+        $promotionApplied = null;
+
+        $promotionApplied = Promotion::where('is_active', true)
+            ->where('required_visits', '<=', $client->visits_count)
+            ->orderBy('required_visits', 'desc')
+            ->first();
+
+        if ($promotionApplied) {
+            $discount = $subtotal * ($promotionApplied->discount_percentage / 100);
+            $client->visits_count = 0;
+        } else {
+            $client->visits_count += 1;
+        }
+
+        $client->total_lifetime_visits += 1;
+        $client->save();
+
+        $totalAmount = $subtotal - $discount;
+
+        $sale = Sale::create([
+            'client_id' => $client->id,
+            'barber_id' => $barberId,
+            'total_amount' => $totalAmount,
+            'payment_method' => $paymentMethod,
+        ]);
+
+        foreach ($items as $item) {
+            SaleItem::create([
+                'sale_id' => $sale->id,
+                'product_id' => $item['type'] === 'product' ? $item['id'] : null,
+                'service_id' => $item['type'] === 'service' ? $item['id'] : null,
+                'quantity' => $item['quantity'],
+                'price_at_sale' => $this->getItemPrice($item['type'], $item['id']),
+            ]);
+        }
+
+        return [
+            'sale' => $sale,
+            'discount' => $discount,
+            'promotionApplied' => $promotionApplied,
+            'totalAmount' => $totalAmount,
+        ];
     }
 
     /**

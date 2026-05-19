@@ -39,11 +39,14 @@ class ProductController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'brand'       => 'nullable|string|max:255',
             'cost'        => 'required|numeric|min:0',
             'price'       => 'required|numeric|min:0',
             'measure'     => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:255',
             'photo'       => 'nullable|string',
+            'stock'       => 'nullable|integer|min:0',
+            'category'    => 'nullable|string|max:255',
             'is_active'   => 'boolean',
         ]);
 
@@ -77,11 +80,14 @@ class ProductController extends Controller
         $request->validate([
             'name'        => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
+            'brand'       => 'nullable|string|max:255',
             'cost'        => 'sometimes|required|numeric|min:0',
             'price'       => 'sometimes|required|numeric|min:0',
             'measure'     => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:255',
             'photo'       => 'nullable|string',
+            'stock'       => 'nullable|integer|min:0',
+            'category'    => 'nullable|string|max:255',
             'is_active'   => 'sometimes|boolean',
         ]);
 

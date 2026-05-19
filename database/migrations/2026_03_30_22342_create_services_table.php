@@ -17,8 +17,11 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('price', 8, 2); // Precio base
             $table->integer('duration_minutes')->default(30); // Para organizar la agenda
+            $table->string('photo')->nullable(); // URL de la foto del servicio o base64
+            $table->json('details')->nullable(); // Para guardar detalles adicionales como herramientas usadas, tipo de corte, etc.
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes(); // Para permitir eliminación suave de servicios sin perder historial de citas o reseñas asociadas
         });
     }
 

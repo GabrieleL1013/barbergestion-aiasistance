@@ -19,6 +19,7 @@ return new class extends Migration
             $table->tinyInteger('rating')->unsigned()->default(5); // 1 a 5 estrellas
             $table->text('comment')->nullable();
             $table->timestamps();
+            $table->softDeletes(); // Para permitir eliminación suave de reseñas
         });
     }
 

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class, // Luego los productos (servicios y productos de venta)
             ServiceSeeder::class, // Luego los servicios
             PromotionSeeder::class, // Luego las promociones
+            AppointmentSeeder::class, // Luego generamos citas con ventas asociadas
             ReviewSeeder::class, // Luego las reseñas
         ]);
     }

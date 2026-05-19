@@ -14,6 +14,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable(); // Nullable por si un producto no necesita tanta explicación
+            $table->string('brand')->nullable(); // Para registrar la marca del producto, si es relevante
             
             // Costos y precios con decimales
             $table->decimal('cost', 8, 2)->default(0);
@@ -24,6 +25,8 @@ return new class extends Migration
             $table->string('measure')->nullable(); 
             $table->string('unit')->nullable();
             $table->longText('photo')->nullable();
+            $table->string('category')->nullable(); // Para categorizar productos (ej: 'cuidado del cabello', 'afeitado', etc.)
+            $table->integer('stock')->default(0); // Para llevar control de inventario
             $table->boolean('is_active')->default(false); // Para marcar si el producto está activo o no
 
             $table->timestamps(); // Crea created_at y updated_at

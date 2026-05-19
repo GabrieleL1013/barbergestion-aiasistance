@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Service;
+use App\Models\User;
+use App\Http\Controllers\SaleController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
@@ -44,6 +47,7 @@ class AppointmentController extends Controller
             'barber_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
             'scheduled_at' => 'required|date|after:now', // No se puede reservar en el pasado
+            'payment_method' => 'nullable|string', // Método de pago para la venta asociada
             'notes' => 'nullable|string'
         ]);
 
@@ -80,20 +84,42 @@ class AppointmentController extends Controller
             ], 422);
         }
 
-        // Si el horario está libre, creamos la cita
-        $appointment = Appointment::create([
-            'client_id' => $request->client_id,
-            'barber_id' => $request->barber_id,
-            'service_id' => $request->service_id,
-            'scheduled_at' => $requestedTime,
-            'status' => 'pending', // Por defecto entra como pendiente
-            'notes' => $request->notes
-        ]);
+        // 3. Guardamos la cita y la venta asociada en una transacción para asegurar consistencia
+        return DB::transaction(function () use ($request, $requestedTime, $service) {
+            $appointment = Appointment::create([
+                'client_id' => $request->client_id,
+                'barber_id' => $request->barber_id,
+                'service_id' => $request->service_id,
+                'scheduled_at' => $requestedTime,
+                'status' => 'pending', // Por defecto entra como pendiente
+                'notes' => $request->notes
+            ]);
 
-        return response()->json([
-            'message' => 'Turno reservado con éxito',
-            'appointment' => $appointment->load(['barber', 'service'])
-        ], 201);
+            $saleController = app(SaleController::class);
+            $saleData = [
+                [
+                    'type' => 'service',
+                    'id' => $request->service_id,
+                    'quantity' => 1,
+                ],
+            ];
+
+            $client = User::findOrFail($request->client_id);
+            $saleResult = $saleController->createSaleForItems(
+                $client,
+                $request->barber_id,
+                $saleData,
+                $request->input('payment_method', 'cash')
+            );
+
+            return response()->json([
+                'message' => 'Turno reservado con éxito y venta asociada creada',
+                'appointment' => $appointment->load(['barber', 'service']),
+                'sale_id' => $saleResult['sale']->id,
+                'total_paid' => $saleResult['totalAmount'],
+                'promotion_applied' => $saleResult['promotionApplied'] ? $saleResult['promotionApplied']->name : 'Ninguna'
+            ], 201);
+        });
     }
 
     /**
@@ -101,7 +127,7 @@ class AppointmentController extends Controller
      * ¡Aquí es donde podrías conectar con la lógica de Fidelidad si lo deseas!
      */
     public function updateStatus(Request $request, $id)
-    {
+    {   // VALIDAMOS SOLO EL CAMPO DE STATUS, porque el resto de los datos de la cita no deberían cambiarse desde aquí
         $request->validate([
             'status' => 'required|in:pending,confirmed,completed,cancelled,no_show'
         ]);
